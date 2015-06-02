@@ -1,0 +1,62 @@
+directory: /media/nas
+library: ~/.config/beets/unsortedmusiclibrary.blb
+
+plugins: madmousetempo the discogs inline lastgenre duplicates scrub info replaygain random mbsync chroma fromfilename
+
+# I don't want underscores as per the default, just remove it.
+# http://beets.readthedocs.org/en/latest/reference/config.html#replace
+replace:
+    '[\\/]': ''
+    '^\.': ''
+    '[\x00-\x1f]': ''
+    '[<>:"\?\*\|]': ''
+    '\s+$': ''
+# I should review if I still want this option or not.
+original_date: yes
+per_disc_numbering: yes
+
+import:
+        # Enabling this /always/ moves, unless -c is used. 
+        move: yes
+        log: ~/beets.log
+
+match:
+        preferred:
+                original_year: yes
+
+# I like my album-directories to be verbose on the information
+# 1. if year is known, use year
+# 2. album name, unique if there are albums with the same name
+# 3. if there are more discs, put each disc in it's own directory
+# 3a. if the disc has an title on its own, name it
+# 4. if this album, is not an album, then tell what it is (i.e. live, soundtrack, etc)
+# Example: The Police/1995 - Live! (disc01 - Orpheum WBCN_Boston Broadcast) [live]
+paths:
+        default: $initial/%the{$albumartist}/%if{$year,$year - }$album%aunique{}%if{$multidisc, (disc$disc$cdtitle)}%if{$notalbum, $cdtype}/$track - $artist - $title
+        comp: VA/%if{$year,$year - }$album%aunique{}%if{$multidisc, (disc$disc$cdtitle)}%if{$notalbum, $cdtype}/$track - $artist - $title
+        singleton: singles/$initial/$artist - $title
+
+# These are courtesy of the inline plugin, they are used in the paths above
+#   initial: albumartist[0].upper() + u'.'
+
+item_fields:
+        cdtitle: u' - %s' % (disctitle) if disctitle else u'' 
+        multidisc: 1 if disctotal > 1 else 0
+        initial: artist.upper().lstrip('[]*')[0]
+
+
+
+album_fields:
+        cdtype: u'[%s]' % (albumtype.lower()) if albumtype else u''
+        notalbum: 0 if albumtype and albumtype.lower() == 'album' else 1
+
+# lastgenre plugin settings
+lastgenre:
+        canonical: true
+
+# replaygain plugin settings
+replaygain:
+        auto: no
+
+madmousetempo:
+        auto: yes
